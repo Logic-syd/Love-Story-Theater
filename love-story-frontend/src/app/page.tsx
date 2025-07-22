@@ -1,11 +1,12 @@
 // src/app/page.tsx
 
 'use client';
-
+import LoadingState from './LoadingState';
 import React, { useState, useEffect, useRef } from 'react';
-import { Box, TextField, IconButton, Typography, Paper, Container, AppBar, Toolbar, CircularProgress } from '@mui/material';
+import { Box, TextField, IconButton, Typography, Paper, Container, Stack, Button, Snackbar, Alert, AppBar, Toolbar, CircularProgress } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import apiClient from '../lib/api';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 // --- 数据结构 (不变) ---
 interface Message {
@@ -33,6 +34,8 @@ const conversationFlow = [
 ];
 
 export default function ChatPage() {
+  const [storyFinished, setStoryFinished] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentInput, setCurrentInput] = useState('');
   const [currentStep, setCurrentStep] = useState(0);
@@ -48,58 +51,113 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // 在 src/app/page.tsx 中，替换旧的 handleSend 函数
-
   const handleSend = async () => {
     if (!currentInput.trim() || isLoading) return;
 
     const userMessage: Message = { id: Date.now(), text: currentInput, sender: 'user' };
 
-    // 我们把更新表单数据的逻辑提前，以便在下一个问题中使用
     const currentQuestionKey = conversationFlow[currentStep].key as keyof FormData;
     const updatedFormData = { ...formData, [currentQuestionKey]: currentInput };
     setFormData(updatedFormData);
 
-    // 更新聊天记录并清空输入框
     setMessages(prev => [...prev, userMessage]);
     setCurrentInput('');
 
     const nextStep = currentStep + 1;
     if (nextStep < conversationFlow.length) {
-
-      // --- VVV 这里是唯一的修改 VVV ---
-
       let nextQuestionText = conversationFlow[nextStep].question;
-      // 检查问题中是否包含 {name} 占位符
       if (nextQuestionText.includes('{name}')) {
-        // 从已经保存的、更新后的表单数据中获取名字来替换，而不是用 currentInput
         nextQuestionText = nextQuestionText.replace('{name}', updatedFormData.name || '');
       }
-      // --- ^^^ 修改结束 ^^^ ---
 
       const aiNextMessage: Message = { id: Date.now() + 1, text: nextQuestionText, sender: 'ai' };
       setTimeout(() => setMessages(prev => [...prev, aiNextMessage]), 500);
       setCurrentStep(nextStep);
 
     } else {
-      // 对话结束，准备调用API (这部分逻辑不变)
-      const finalAiMessage: Message = { id: Date.now() + 1, text: '我明白了，眼前的问题没什么大不了的，让我来看看你们的未来是怎么幸福生活的', sender: 'ai' };
-      setTimeout(async () => {
-        setMessages(prev => [...prev, finalAiMessage]);
+      // --- VVV 这里是本次的核心修改 VVV ---
+
+      // 1. 立刻显示一个“我明白了”的确认和安慰消息
+      const acknowledgementMessage: Message = {
+        id: Date.now() + 1,
+        // 使用你在截图中展示的、非常棒的文案
+        text: '我明白了，眼前的问题没什么大不了的，让我来看看你们的未来是怎么幸福生活的。',
+        sender: 'ai'
+      };
+      setMessages(prev => [...prev, acknowledgementMessage]);
+
+      // 2. 稍等片刻 (比如2秒)，再进入全屏加载并调用API
+      setTimeout(() => {
+        // 2.1 显示全屏花瓣雨
         setIsLoading(true);
-        try {
-          const response = await apiClient.post('/api/generate-story', updatedFormData);
-          const storyMessage: Message = { id: Date.now() + 2, text: response.data.story, sender: 'ai' };
-          setMessages(prev => [...prev, storyMessage]);
-        } catch (error) {
-          console.error('API call failed:', error);
-          const errorMessage: Message = { id: Date.now() + 2, text: '抱歉，故事生成失败了，请检查后端服务或稍后再试。', sender: 'ai' };
-          setMessages(prev => [...prev, errorMessage]);
-        } finally {
-          setIsLoading(false);
-        }
-      }, 500);
+
+        // 2.2 在后台悄悄调用API
+        const callApi = async () => {
+          try {
+            const response = await apiClient.post('/api/generate-story', updatedFormData);
+            const storyMessage: Message = { id: Date.now() + 2, text: response.data.story, sender: 'ai' };
+            // API成功返回后，用故事替换掉确认消息（或者直接追加）
+            // 这里我们选择追加，保留上下文
+            setMessages(prev => [...prev, storyMessage]);
+            setStoryFinished(true);
+          } catch (error) {
+            console.error('API call failed:', error);
+            const errorMessage: Message = { id: Date.now() + 2, text: '抱歉，故事生成失败了，请检查后端服务或稍后再试。', sender: 'ai' };
+            setMessages(prev => [...prev, errorMessage]);
+          } finally {
+            // 2.3 故事出现后，隐藏加载画面
+            setIsLoading(false);
+          }
+        };
+
+        callApi();
+
+      }, 2000); // 延迟2秒 (2000毫秒)
+      // --- ^^^ 修改结束 ^^^ ---
     }
+  };
+
+  const handleCopy = (textToCopy: string) => {
+    navigator.clipboard.writeText(textToCopy).then(() => {
+      setCopySuccess(true);
+      // 2秒后自动关闭提示
+      setTimeout(() => setCopySuccess(false), 2000);
+    }).catch(err => {
+      console.error('Failed to copy text: ', err);
+    });
+  };
+
+  const handleRegenerate = () => {
+    // 这个函数直接调用 handleSend，但要确保使用的是最终的、完整的表单数据
+    // 我们需要把调用API的逻辑抽出来
+    // 为了简单起见，我们暂时把调用API的逻辑直接放在这里
+    const callApi = async () => {
+      setStoryFinished(false); // 隐藏旧的按钮
+      const finalAiMessage: Message = { id: Date.now(), text: '好的，我们换一个角度，再来看一次你们美好的未来...', sender: 'ai' };
+      setMessages(prev => [...prev, finalAiMessage]);
+      setIsLoading(true);
+      try {
+        const response = await apiClient.post('/api/generate-story', formData);
+        const storyMessage: Message = { id: Date.now() + 1, text: response.data.story, sender: 'ai' };
+        setMessages(prev => [...prev, storyMessage]);
+        setStoryFinished(true); // 故事生成后再次显示按钮
+      } catch (error) {
+        // ...错误处理...
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    callApi();
+  };
+
+  const handleReset = () => {
+    // 重置所有状态到初始值
+    setMessages([{ id: 1, text: conversationFlow[0].question, sender: 'ai' }]);
+    setCurrentInput('');
+    setCurrentStep(0);
+    setFormData({});
+    setIsLoading(false);
+    setStoryFinished(false);
   };
 
   const handleKeyPress = (event: React.KeyboardEvent) => {
@@ -108,47 +166,86 @@ export default function ChatPage() {
     }
   };
 
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#fffaf5' }}> {/* 背景改成更柔和的米白色 */}
-      {/* --- 视觉修改: AppBar颜色 --- */}
-      <AppBar position="static" sx={{ bgcolor: '#ffcdd2' }} elevation={1}>
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ color: '#5D4037' }}>
-            你是幸福的
-          </Typography>
-        </Toolbar>
-      </AppBar>
+    // 1. 我们用一个最外层的 Box 作为容器
+    <Box>
 
-      <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
-        {messages.map((msg) => (
-          <Box key={msg.id} sx={{ display: 'flex', justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start', mb: 2 }}>
-            <Paper
-              elevation={2}
-              sx={{
-                p: 1.5,
-                // --- 视觉修改: 聊天气泡颜色 ---
-                bgcolor: msg.sender === 'user' ? '#ff8a80' : '#ffffff', // 用户气泡用珊瑚粉
-                color: msg.sender === 'user' ? 'white' : 'black',
-                maxWidth: '80%',
-                borderRadius: msg.sender === 'user' ? '20px 20px 5px 20px' : '20px 20px 20px 5px',
-              }}
-            >
-              <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>{msg.text}</Typography>
-            </Paper>
+      {/* 2. 这是我们的第一个条件：当 isLoading 为 true 时，显示加载组件 */}
+      {isLoading && <LoadingState />}
+
+      {/* 3. 这是我们的第二个条件：当 isLoading 为 false 时，才显示我们整个聊天界面 */}
+      {/* 我们用 !isLoading && (...) 把你之前所有的UI代码都包起来 */}
+      {!isLoading && (
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#fffaf5' }}>
+          <AppBar
+            position="static"
+            sx={{
+              bgcolor: '#ffcdd2',
+              // --- VVV 添加下面这两行 VVV ---
+              borderBottomLeftRadius: '16px', // 左下角圆角
+              borderBottomRightRadius: '16px', // 右下角圆角
+            }}
+            elevation={1}
+          >
+            <Toolbar>
+              <Typography variant="h6" component="div" sx={{ color: '#5D4037' }}>
+                我们一定会幸福～
+              </Typography>
+            </Toolbar>
+          </AppBar>
+
+          <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
+            {messages.map((msg) => (
+              <Box key={msg.id} sx={{ display: 'flex', justifyContent: msg.sender === 'user' ? 'flex-end' : 'flex-start', mb: 2 }}>
+                <Paper
+                  elevation={2}
+                  sx={{
+                    p: 1.5,
+                    bgcolor: msg.sender === 'user' ? '#ff8a80' : '#ffffff',
+                    color: msg.sender === 'user' ? 'white' : 'black',
+                    maxWidth: '80%',
+                    borderRadius: msg.sender === 'user' ? '20px 20px 5px 20px' : '20px 20px 20px 5px',
+                  }}
+                >
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap' }}>{msg.text}</Typography>
+                </Paper>
+              </Box>
+            ))}
+            {storyFinished && !isLoading && (
+              <Stack direction="row" spacing={1} justifyContent="flex-start" sx={{ ml: 1, mt: 1 }}>
+                <Button variant="text" size="small" onClick={handleRegenerate} sx={{ color: '#ff8a80' }}>换一个梦境</Button>
+                <Button variant="text" size="small" onClick={handleReset} sx={{ color: '#ff8a80' }}>我想改改细节</Button>
+                <IconButton
+                  size="small"
+                  onClick={() => {
+                    const lastMessage = messages.filter(m => m.sender === 'ai').pop();
+                    if (lastMessage) handleCopy(lastMessage.text);
+                  }}
+                  sx={{ ml: 'auto', color: '#BDBDBD' }} // ml: 'auto' 把这个按钮推到最右边
+                >
+                  <ContentCopyIcon fontSize="small" />
+                </IconButton>
+              </Stack>
+            )}
+            <div ref={messagesEndRef} />
           </Box>
-        ))}
-        <div ref={messagesEndRef} />
-      </Box>
 
-      <Paper elevation={3} sx={{ position: 'sticky', bottom: 0, width: '100%', bgcolor: '#ffffff' }}>
-        <Box sx={{ p: 1, display: 'flex', alignItems: 'center' }}>
-          <TextField fullWidth variant="outlined" size="small" placeholder={isLoading ? "正在生成故事..." : "请输入你的回答..."} value={currentInput} onChange={(e) => setCurrentInput(e.target.value)} onKeyPress={handleKeyPress} disabled={isLoading || currentStep >= conversationFlow.length - 1 && Object.keys(formData).length >= conversationFlow.length} />
-          {/* --- 视觉修改: 发送按钮颜色 --- */}
-          <IconButton onClick={handleSend} disabled={isLoading || !currentInput.trim()} sx={{ color: '#ff8a80' }}>
-            {isLoading ? <CircularProgress size={24} color="inherit" /> : <SendIcon />}
-          </IconButton>
+          <Paper elevation={3} sx={{ position: 'sticky', bottom: 0, width: '100%', bgcolor: '#ffffff' }}>
+            <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
+              <TextField fullWidth variant="outlined" placeholder={isLoading ? "正在生成故事..." : "请输入你的回答..."} value={currentInput} onChange={(e) => setCurrentInput(e.target.value)} onKeyPress={handleKeyPress} disabled={isLoading || currentStep >= conversationFlow.length - 1 && Object.keys(formData).length >= conversationFlow.length} />
+              <IconButton onClick={handleSend} disabled={isLoading || !currentInput.trim()} sx={{ color: '#ff8a80' }}>
+                {isLoading ? <CircularProgress size={24} color="inherit" /> : <SendIcon />}
+              </IconButton>
+            </Box>
+          </Paper>
         </Box>
-      </Paper>
+      )}
+      <Snackbar open={copySuccess} autoHideDuration={2000} onClose={() => setCopySuccess(false)}>
+        <Alert onClose={() => setCopySuccess(false)} severity="success" sx={{ width: '100%' }}>
+          故事已复制到剪贴板！
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }
