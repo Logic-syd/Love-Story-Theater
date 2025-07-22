@@ -1,0 +1,12 @@
+### Generate a new story with detailed features
+POST http://localhost:8080/api/generate-story
+Content-Type: application/json
+
+{
+  "name": "林深",
+  "work": "植物学家",
+  "personality": "温柔、有耐心、对待事物很专注",
+  "appearance": "清爽的短发",
+  "meetingContext": "在一次雨后的植物园漫步时认识的",
+  "problem": "最近感觉很迷茫，不知道未来的方向在哪里。"
+}
