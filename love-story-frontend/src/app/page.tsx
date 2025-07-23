@@ -42,6 +42,8 @@ export default function ChatPage() {
   const [formData, setFormData] = useState<Partial<FormData>>({});
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+
 
   useEffect(() => {
     setMessages([{ id: 1, text: conversationFlow[0].question, sender: 'ai' }]);
@@ -51,12 +53,52 @@ export default function ChatPage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const validateInput = (name: keyof FormData, value: string): string => {
+    switch (name) {
+      case 'name':
+        // 只保留长度校验
+        if (value.length > 50) return '名字太长啦，最多50个字';
+        return '';
+      case 'problem':
+        if (!value) return '别忘了告诉我你遇到的问题'; // 问题的非空校验依然保留，因为它是最后一个核心输入
+        if (value.length > 600) return `你的倾诉我们都收到了，为了让故事更聚焦，请把问题浓缩在600字以内哦`;
+        return '';
+      case 'meetingContext':
+        if (value.length > 300) return '描述太长啦，300字以内就好';
+        return '';
+      case 'work':
+        if (value.length > 300) return '工作描述请保持在300字以内';
+        return '';
+      case 'appearance':
+        if (value.length > 300) return '外貌描述在300字以内就够啦';
+        return '';
+      case 'personality':
+        if (value.length > 300) return '性格描述在300字以内就好';
+        return '';
+      default:
+        return '';
+    }
+  };
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = event.target;
+    setCurrentInput(value);
+
+    // 实时验证
+    const error = validateInput(name as keyof FormData, value);
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
   const handleSend = async () => {
     if (!currentInput.trim() || isLoading) return;
 
     const userMessage: Message = { id: Date.now(), text: currentInput, sender: 'user' };
 
     const currentQuestionKey = conversationFlow[currentStep].key as keyof FormData;
+    const error = validateInput(currentQuestionKey, currentInput);
+    if (error) {
+      setErrors(prev => ({ ...prev, [currentQuestionKey]: error }));
+      return; // 如果有错误，就阻止发送
+    }
     const updatedFormData = { ...formData, [currentQuestionKey]: currentInput };
     setFormData(updatedFormData);
 
@@ -165,7 +207,8 @@ export default function ChatPage() {
       handleSend();
     }
   };
-
+  const currentKey = conversationFlow[currentStep]?.key as keyof FormData;
+  const currentError = errors[currentKey];
 
   return (
     // 1. 我们用一个最外层的 Box 作为容器
@@ -233,7 +276,7 @@ export default function ChatPage() {
 
           <Paper elevation={3} sx={{ position: 'sticky', bottom: 0, width: '100%', bgcolor: '#ffffff' }}>
             <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
-              <TextField fullWidth variant="outlined" placeholder={isLoading ? "正在生成故事..." : "请输入你的回答..."} value={currentInput} onChange={(e) => setCurrentInput(e.target.value)} onKeyPress={handleKeyPress} disabled={isLoading || currentStep >= conversationFlow.length - 1 && Object.keys(formData).length >= conversationFlow.length} />
+              <TextField fullWidth variant="outlined" name={currentKey} placeholder={isLoading ? "正在生成故事..." : "请输入你的回答..."} value={currentInput} onChange={handleChange} error={!!currentError} helperText={currentError || ' '} onKeyPress={handleKeyPress} disabled={isLoading || currentStep >= conversationFlow.length - 1 && Object.keys(formData).length >= conversationFlow.length} />
               <IconButton onClick={handleSend} disabled={isLoading || !currentInput.trim()} sx={{ color: '#ff8a80' }}>
                 {isLoading ? <CircularProgress size={24} color="inherit" /> : <SendIcon />}
               </IconButton>
