@@ -1,18 +1,23 @@
-
 [versions]
-kotlin-version = "2.1.10"
-ktor-version = "3.2.2"
-logback-version = "1.4.14"
+ktor = "2.3.12"
+kotlin = "1.9.23"
+logback = "1.4.14"
+shadow = "8.1.1"
 
 [libraries]
-ktor-server-core = { module = "io.ktor:ktor-server-core", version.ref = "ktor-version" }
-ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation", version.ref = "ktor-version" }
-ktor-server-netty = { module = "io.ktor:ktor-server-netty", version.ref = "ktor-version" }
-logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback-version" }
-ktor-server-config-yaml = { module = "io.ktor:ktor-server-config-yaml", version.ref = "ktor-version" }
-ktor-server-test-host = { module = "io.ktor:ktor-server-test-host", version.ref = "ktor-version" }
-kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin-version" }
+ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor" }
+ktor-server-netty = { module = "io.ktor:ktor-server-netty-jvm", version.ref = "ktor" }
+ktor-server-content-negotiation = { module = "io.ktor:ktor-server-content-negotiation-jvm", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json-jvm", version.ref = "ktor" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors-jvm", version.ref = "ktor" }
+ktor-client-core = { module = "io.ktor:ktor-client-core-jvm", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio-jvm", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation-jvm", version.ref = "ktor" }
+logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
+dotenv-kotlin = { module = "io.github.cdimascio:dotenv-kotlin", version = "6.4.1" }
 
 [plugins]
-kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
-ktor = { id = "io.ktor.plugin", version.ref = "ktor-version" }
+ktor-server = { id = "io.ktor.plugin", version.ref = "ktor" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadow" }
