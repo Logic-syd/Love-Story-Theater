@@ -44,8 +44,8 @@ object DeepSeekService {
         }
     }
 
-    // 定义一个异步函数来生成故事
-    suspend fun generateStory(prompt: String): String {
+    // 定义一个异步函数来生成故事/问题
+    suspend fun generateRespnse(prompt: String): String {
         return try {
             val response: DeepSeekResponse = client.post(DEEPSEEK_API_URL) {
                 // 设置请求头
@@ -63,7 +63,7 @@ object DeepSeekService {
             }.body() // 发送请求并获取响应体
 
             // 从响应中提取故事文本
-            response.choices.firstOrNull()?.message?.content?.trim() ?: "AI未能生成故事，请稍后再试。"
+            response.choices.firstOrNull()?.message?.content?.trim() ?: "AI未能生成返回值，请稍后再试。"
 
         } catch (e: Exception) {
             println("调用DeepSeek API时发生错误: ${e.message}")
