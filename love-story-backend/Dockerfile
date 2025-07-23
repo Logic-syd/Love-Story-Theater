@@ -16,6 +16,7 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # 使用通配符*来复制jar包，解决文件名可能不匹配的问题
+COPY gradle/libs.versions.toml gradle/libs.versions.toml
 COPY --from=builder /home/gradle/src/build/libs/*-all.jar app.jar
 
 EXPOSE 8080
