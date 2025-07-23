@@ -21,18 +21,19 @@ repositories {
 }
 
 dependencies {
+    // Ktor Server Dependencies
     implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(libs.ktor.server.cors)
+
+    // Ktor Client Dependencies
+    implementation(libs.ktor.client.core)
+    implementation(libs.ktor.client.cio)
+    implementation(libs.ktor.client.content.negotiation)
+    
+    // Other Dependencies
     implementation(libs.logback.classic)
-    implementation(libs.ktor.server.config.yaml)
-    testImplementation(libs.ktor.server.test.host)
-    testImplementation(libs.kotlin.test.junit)
-    implementation("io.github.cdimascio:dotenv-kotlin:6.4.1")
-    implementation("io.ktor:ktor-server-content-negotiation-jvm")
-    implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
-    implementation("io.ktor:ktor-client-core-jvm")
-    implementation("io.ktor:ktor-client-cio-jvm") // CIO是一个轻量级的客户端引擎
-    implementation("io.ktor:ktor-client-content-negotiation-jvm") // 让客户端也能处理JSON
-    implementation("io.ktor:ktor-server-cors-jvm")
+    implementation(libs.dotenv.kotlin)
 }
