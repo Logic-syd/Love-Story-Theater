@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.23"
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 kotlin {
     jvmToolchain(16)

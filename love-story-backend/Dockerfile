@@ -6,8 +6,8 @@ WORKDIR /home/gradle/src
 
 COPY . .
 
-RUN gradle shadowJar --no-daemon
-
+# RUN gradle shadowJar --no-daemon
+RUN gradle shadowJar --no-daemon --stacktrace
 
 # --- Stage 2: The Runner ---
 # 使用一个轻量级、稳定可靠的Eclipse Temurin镜像来运行，解决 not found 的问题
