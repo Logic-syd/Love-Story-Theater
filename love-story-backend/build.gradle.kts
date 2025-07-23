@@ -4,6 +4,9 @@ plugins {
     alias(libs.plugins.ktor)
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.23"
 }
+kotlin {
+    jvmToolchain(16)
+}
 
 group = "com.egg"
 version = "0.0.1"
