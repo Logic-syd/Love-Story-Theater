@@ -69,3 +69,31 @@ body {
 .petal:nth-child(13) { left: 55%; animation-duration: 19s; animation-delay: 3s; }
 .petal:nth-child(14) { left: 65%; animation-duration: 10s; animation-delay: 5s; }
 .petal:nth-child(15) { left: 85%; animation-duration: 15s; animation-delay: 0s; }
+
+
+/* "正在输入"的跳动小点动画 */
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  margin: 0 2px;
+  background-color: #b0bec5; /* 小点的颜色 */
+  border-radius: 50%;
+  animation: bounce 1.2s infinite ease-in-out;
+}
+
+.typing-dot:nth-of-type(2) {
+  animation-delay: -1.0s;
+}
+
+.typing-dot:nth-of-type(3) {
+  animation-delay: -0.8s;
+}
+
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+  }
+  40% {
+    transform: scale(1.0);
+  }
+}
