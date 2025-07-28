@@ -17,8 +17,7 @@ data class StoryRequest(
 @Serializable
 data class DynamicInteractionRequest(
         val name: String,
-        val appearance: String,
-        val meetingContext: String
+        val context: String // Changed to accept a single 'context' string
 )
 
 // 用于所有API返回的统一响应结构
