@@ -120,7 +120,6 @@ export default function ChatPage() {
         break;
 
       case 'awaiting_final_ack':
-        debugger
         setIsLoading(true);
         try {
           const response = await apiClient.post('/api/generate-story', updatedData);
