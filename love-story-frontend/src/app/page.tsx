@@ -9,13 +9,14 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import apiClient from '../lib/api';
 import LoadingState from './LoadingState';
 import TypingIndicator from './TypingIndicator';
+import LanguageSwitcher from './LanguageSwitcher';
 import { content } from '../lib/conversationContent';
 
 interface Message { id: number; sender: 'ai' | 'user'; text?: string; component?: React.ReactNode; }
 interface FormData { name?: string; meetingContext?: string; memories?: string; appearance?: string; work?: string; personality?: string; problem?: string; }
 
 export default function ChatPage() {
-  const [language] = useState('zh');
+  const [language, setLanguage] = useState('zh');
   const currentContent = content[language];
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -28,8 +29,12 @@ export default function ChatPage() {
   const [conversationPhase, setConversationPhase] = useState('asking_name');
   const [questionPoolA, setQuestionPoolA] = useState<any[]>([]);
   const [questionPoolB, setQuestionPoolB] = useState<any[]>([]);
+  const [cleanupQueue, setCleanupQueue] = useState<any[]>([]);
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
   const [pendingAiMessage, setPendingAiMessage] = useState<Message | null>(null);
+
+
+
 
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
@@ -42,6 +47,11 @@ export default function ChatPage() {
 
     setCurrentQuestion(nameQuestion);
     setMessages([{ id: Date.now() + Math.random(), text: questionText, sender: 'ai' }]);
+
+    setConversationPhase('asking_name');
+    setStoryFinished(false);
+    setFormData({});
+    setCurrentInput('');
   }, [language, currentContent]);
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
@@ -66,8 +76,8 @@ export default function ChatPage() {
       setPendingAiMessage(null);
     }
     messagesToAdd.push(userMessage);
-    setMessages(prev => [...prev, ...messagesToAdd]);
 
+    setMessages(prev => [...prev, ...messagesToAdd]);
     setFormData(updatedData);
     setCurrentInput('');
 
@@ -75,54 +85,76 @@ export default function ChatPage() {
       case 'asking_name':
         const nextQuestionFromA = questionPoolA.pop()!;
         askQuestion(nextQuestionFromA);
+        setQuestionPoolA(questionPoolA);
         setConversationPhase('asking_pool_A_1');
         break;
 
       case 'asking_pool_A_1':
-        const nextQuestionFromB = questionPoolB.pop()!;
-        askQuestion(nextQuestionFromB);
+        // 1. 从B题库中随机选择下一个要提问的主题
+        const topicForAi = questionPoolB.pop()!;
+        setQuestionPoolB(questionPoolB); // 更新B题库（移除已选中的问题）
 
-        const interactionData = { name: updatedData.name, context: updatedData.meetingContext || updatedData.memories };
-        apiClient.post('/api/dynamic-interaction', interactionData)
-          .then(response => {
-            const dynamicAiResponse: Message = { id: Date.now() + Math.random(), text: response.data.response, sender: 'ai' };
-            setPendingAiMessage(dynamicAiResponse);
-          })
-          .catch(err => console.error("Dynamic interaction failed:", err));
+        // 2. 显示“正在输入”动画
+        const typingMessage: Message = { id: Date.now() + Math.random(), sender: 'ai', component: <TypingIndicator /> };
+        setMessages(prev => [...prev, typingMessage]);
+        // 3. 将选择好的主题和上下文一起发给AI
+        const interactionData = {
+          name: updatedData.name,
+          context: updatedData.meetingContext || updatedData.memories,
+          topicToAsk: topicForAi.key,// <--- 告诉AI要问什么
+          language: language
+        };
+        try {
+          const response = await apiClient.post('/api/dynamic-interaction', interactionData);
+          const dynamicQuestion: Message = { id: Date.now() + Math.random(), text: response.data.response, sender: 'ai' };
+          // 4. 用AI的真实回复替换掉“正在输入...”动画
+          setMessages(prev => [...prev.slice(0, -1), dynamicQuestion]);
+          setCurrentQuestion(topicForAi); // 更新当前问题状态
+        } catch (error) {
+          // 错误处理...
+          console.error("Dynamic interaction failed:", error);
+          askQuestion(topicForAi);
+          setMessages(prev => prev.slice(0, -1));
+        }
 
-        setConversationPhase('asking_pool_B_1');
+        setConversationPhase('cleanup');
         break;
 
-      case 'asking_pool_B_1':
-        const lastQuestionFromA = questionPoolA.pop()!;
-        askQuestion(lastQuestionFromA);
-        setConversationPhase('asking_pool_A_2');
-        break;
+      case 'cleanup': {
+        // Ask all remaining questions from the combined pools until empty.
+        const cleanupPool = [...questionPoolA, ...questionPoolB].sort(() => Math.random() - 0.5);
 
-      case 'asking_pool_A_2':
-      case 'asking_pool_B_2':
-        if (questionPoolB.length > 0) {
-          const nextQuestionFromB_cont = questionPoolB.pop()!;
-          askQuestion(nextQuestionFromB_cont);
-          setConversationPhase('asking_pool_B_2');
+        if (cleanupPool.length > 0) {
+          const nextQuestion = cleanupPool.shift()!;
+          askQuestion(nextQuestion);
+          // Update the correct original pool
+          if (currentContent.poolA.some(q => q.key === nextQuestion.key)) {
+            setQuestionPoolA(prev => prev.filter(q => q.key !== nextQuestion.key));
+          } else {
+            setQuestionPoolB(prev => prev.filter(q => q.key !== nextQuestion.key));
+          }
         } else {
+          // All details gathered, ask the final problem question.
           askQuestion(currentContent.problemQuestion);
           setConversationPhase('asking_problem');
         }
         break;
+      }
 
-      case 'asking_problem':
+      case 'asking_problem': {
         const ackOptions = currentContent.finalAcknowledgement.texts;
         const ackText = ackOptions[Math.floor(Math.random() * ackOptions.length)];
         const finalAiMessage: Message = { id: Date.now() + Math.random(), text: ackText, sender: 'ai' };
         setMessages(prev => [...prev, finalAiMessage]);
+        setCurrentQuestion(null);
         setConversationPhase('awaiting_final_ack');
         break;
-
+      }
       case 'awaiting_final_ack':
         setIsLoading(true);
         try {
-          const response = await apiClient.post('/api/generate-story', updatedData);
+          const finalPayload = { ...updatedData, language: language };
+          const response = await apiClient.post('/api/generate-story', finalPayload);
           const storyMessage: Message = { id: Date.now() + Math.random(), text: response.data.response, sender: 'ai' };
           setMessages(prev => [...prev, storyMessage]);
           setStoryFinished(true);
@@ -172,7 +204,10 @@ export default function ChatPage() {
       {!isLoading && (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#fffaf5' }}>
           <AppBar position="static" sx={{ bgcolor: '#ffcdd2', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }} elevation={1}>
-            <Toolbar><Typography variant="h6" component="div" sx={{ color: '#5D4037' }}>你的情感慰藉小屋</Typography></Toolbar>
+            <Toolbar><Typography variant="h6" component="div" sx={{ color: '#5D4037' }}>{currentContent.appTitle}</Typography>
+              <Box sx={{ flexGrow: 1 }} />
+              {/* Add the new LanguageSwitcher component here */}
+              <LanguageSwitcher language={language} setLanguage={setLanguage} /></Toolbar>
           </AppBar>
           <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 2 }}>
             {messages.map((msg) => (
@@ -193,14 +228,14 @@ export default function ChatPage() {
           </Box>
           <Paper elevation={3} sx={{ position: 'sticky', bottom: 0, width: '100%' }}>
             <Box sx={{ p: 2, display: 'flex', alignItems: 'center' }}>
-              <TextField fullWidth variant="outlined" placeholder="请输入你的回答..." value={currentInput} onChange={(e) => setCurrentInput(e.target.value)} onKeyPress={handleKeyPress} disabled={isLoading || storyFinished} />
+              <TextField fullWidth variant="outlined" placeholder={currentContent.inputPlaceholder} value={currentInput} onChange={(e) => setCurrentInput(e.target.value)} onKeyPress={handleKeyPress} disabled={isLoading || storyFinished} />
               <IconButton onClick={handleSend} disabled={isLoading || !currentInput.trim()} sx={{ color: '#ff8a80' }}><SendIcon /></IconButton>
             </Box>
           </Paper>
         </Box>
       )}
       <Snackbar open={copySuccess} autoHideDuration={2000} onClose={() => setCopySuccess(false)}>
-        <Alert severity="success" sx={{ width: '100%' }}>故事已复制到剪贴板！</Alert>
+        <Alert severity="success" sx={{ width: '100%' }}>{currentContent.copySuccessMessage}</Alert>
       </Snackbar>
     </Box>
   );

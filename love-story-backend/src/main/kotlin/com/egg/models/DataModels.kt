@@ -5,19 +5,23 @@ import kotlinx.serialization.Serializable
 // 用于最终生成故事的请求，包含所有信息
 @Serializable
 data class StoryRequest(
-        val name: String,
-        val meetingContext: String,
-        val work: String,
-        val appearance: String,
-        val personality: String,
-        val problem: String
+        val name: String?,
+        val meetingContext: String?,
+        val memories: String?,
+        val appearance: String?,
+        val work: String?,
+        val personality: String?,
+        val problem: String?,
+        val language: String = "zh"
 )
 
 // 用于中间动态交互的请求
 @Serializable
 data class DynamicInteractionRequest(
-        val name: String,
-        val context: String // Changed to accept a single 'context' string
+        val name: String?,
+        val context: String?,
+        val topicToAsk: String,
+        val language: String = "zh"
 )
 
 // 用于所有API返回的统一响应结构
