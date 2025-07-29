@@ -11,6 +11,7 @@ import LoadingState from './LoadingState';
 import TypingIndicator from './TypingIndicator';
 import LanguageSwitcher from './LanguageSwitcher';
 import { content } from '../lib/conversationContent';
+import type { Question } from '../lib/conversationContent';
 
 interface Message { id: number; sender: 'ai' | 'user'; text?: string; component?: React.ReactNode; }
 interface FormData { name?: string; meetingContext?: string; memories?: string; appearance?: string; work?: string; personality?: string; problem?: string; }
@@ -27,14 +28,10 @@ export default function ChatPage() {
   const [copySuccess, setCopySuccess] = useState(false);
 
   const [conversationPhase, setConversationPhase] = useState('asking_name');
-  const [questionPoolA, setQuestionPoolA] = useState<any[]>([]);
-  const [questionPoolB, setQuestionPoolB] = useState<any[]>([]);
-  const [cleanupQueue, setCleanupQueue] = useState<any[]>([]);
-  const [currentQuestion, setCurrentQuestion] = useState<any>(null);
+  const [questionPoolA, setQuestionPoolA] = useState<Question[]>([]);
+  const [questionPoolB, setQuestionPoolB] = useState<Question[]>([]);
+  const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [pendingAiMessage, setPendingAiMessage] = useState<Message | null>(null);
-
-
-
 
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
@@ -56,7 +53,7 @@ export default function ChatPage() {
 
   useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  const askQuestion = (questionObj: any) => {
+  const askQuestion = (questionObj: Question) => {
     const questionText = questionObj.texts[Math.floor(Math.random() * questionObj.texts.length)];
     const aiMessage: Message = { id: Date.now() + Math.random(), text: questionText, sender: 'ai' };
     setCurrentQuestion(questionObj);
@@ -67,10 +64,10 @@ export default function ChatPage() {
     if (!currentInput.trim() || isLoading) return;
 
     const userMessage: Message = { id: Date.now() + Math.random(), text: currentInput, sender: 'user' };
-    const currentKey = currentQuestion.key as keyof FormData;
+    const currentKey = currentQuestion?.key as keyof FormData;
     const updatedData = { ...formData, [currentKey]: currentInput };
 
-    let messagesToAdd: Message[] = [];
+    const messagesToAdd: Message[] = [];
     if (pendingAiMessage) {
       messagesToAdd.push(pendingAiMessage);
       setPendingAiMessage(null);
@@ -178,7 +175,7 @@ export default function ChatPage() {
 
   const handleRegenerate = async () => {
     setStoryFinished(false);
-    const thinkingMessage: Message = { id: Date.now() + Math.random(), text: "好的，我们换一个角度，再来看一次你们美好的未来...", sender: 'ai' };
+    const thinkingMessage: Message = { id: Date.now() + Math.random(), text: currentContent.regenerateThinkingMessage, sender: 'ai' };
     setMessages(prev => [...prev, thinkingMessage]);
     setIsLoading(true);
     try {
