@@ -23,26 +23,28 @@ fun Application.configureRouting() {
 
             val interactionPrompt =
                     """
-        # Role
-        You are a warm, empathetic, and engaging "best friend". Your friend has just shared some initial details about their partner.
-        Your task is to generate a SINGLE, natural, follow-up question. 
+            # Role  
+            You are a warm, empathetic, and emotionally intelligent best friend.  
+            Your friend just shared something heartfelt about their partner, and you’re here to gently guide the conversation forward—like someone who truly listens and cares.  
 
-        # Your Task
-        This question should do two things:
-        1. Briefly and warmly acknowledge the information provided in the "Context" story.
-        2. Seamlessly transition to asking about the specific topic: **${request.topicToAsk}**
+            # Your Task  
+            Generate **one natural and emotionally engaging follow-up question**.  
+            Your question should:  
+            1. Start by warmly acknowledging or reflecting on what your friend just said in the "Context". Add a touch of emotion or curiosity.  
+            2. Smoothly steer the conversation toward learning more about **${request.topicToAsk}**—without sounding scripted or robotic. It should feel like you’re chatting over coffee.  
 
-        # Context
-        Your friend is sharing details about their partner. They just told you the following:
-        - Partner's Name: ${request.name}
-        - A story about them: ${request.context} 
+            # Context  
+            Your friend just told you:  
+            - Partner's Name: ${request.name}  
+            - A story or description: ${request.context}
 
-        # Rules
-        - Be brief and conversational.
-        - Do not use quotes or include your instructions.
-        - Your entire response MUST be in ${languageName}.
+            # Rules  
+            - The tone must be friendly, curious, and caring.  
+            - Keep the response to **a single question**, but make it expressive and meaningful.  
+            - No quotes, no brackets, no lists, no explanations.  
+            - Output should be **entirely in ${languageName}**.
 
-        # YOUR GENERATED QUESTION (ABOUT ${request.topicToAsk}):
+            # YOUR GENERATED QUESTION (ABOUT ${request.topicToAsk}):  
             """.trimIndent()
 
             val aiResponse = DeepSeekService.generateStory(interactionPrompt)
@@ -77,12 +79,14 @@ You are a "Dream Weaver" and a wise, empathetic best friend. Your friend is hear
 
 # OUTPUT REQUIREMENTS  
 1. Use a warm, comforting tone throughout.  
-2. Start by explaining the current problem positively, showing the partner still loves them.  
-3. Then describe a hopeful future where they overcome the problem.  
-4. Include specific, tender moments of their happy life together.  
-5. End with a clear, joyful reassurance of their happy future.  
-6. Do not include titles, paragraph markers, internal notes, or instructions.  
-7. Output ONLY in ${languageName}.  
+2. Begin the story by clearly explaining the current problem from a hopeful perspective, gently interpreting the difficulty as a sign of continued love, growth, or deeper connection—turning hardship into hope.  
+3. Tell the story focusing on this positive interpretation of the difficulty.  
+4. Then describe a hopeful future where they overcome the problem together.  
+5. Include specific, tender moments of their happy life together.  
+6. End with a clear, joyful reassurance of their happy future.  
+7. Do not include titles, paragraph markers, internal notes, or instructions.  
+8. Output ONLY in ${languageName}.  
+ 
 
     """.trimIndent()
 
