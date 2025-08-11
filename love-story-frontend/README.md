@@ -1,36 +1,69 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Emotional Comfort Cabin
+
+## About This Project
+
+This is a full-stack, AI-powered web application I built to explore the intersection of technology and emotional support. It’s a safe space for users who are feeling down about their relationship. Through a carefully guided, empathetic conversation, the app gathers details about their situation and their partner, then uses an AI to generate a unique, hopeful story that reframes their current problem as a temporary trial on the path to a happy future.
+
+My goal was to create an experience that feels less like a tool and more like a warm, understanding friend.
+
+You can try the live version here: https://love-story-theater.vercel.app/
+
+## Key Features
+
+  * **Dynamic & Empathetic Dialogue**: The heart of the app is a non-linear, multi-stage conversational flow. To keep the experience fresh, the app randomizes questions from different pools and uses an AI-driven interaction to generate contextual, follow-up questions. This makes every conversation feel natural and unique.
+
+  * **Advanced Prompt Engineering**: I authored and refined a series of complex prompts to precisely control the AI's "best friend" persona. The prompts guide the AI’s narrative style, content structure, and emotional tone, transforming the user's raw input into a coherent and uplifting story.
+
+  * **Mobile-First & Internationalized**: The chat interface was built with a mobile-first approach using Material-UI for a clean, responsive experience on any device. The entire application is architected for internationalization, with all text content managed in a separate configuration file (currently supporting Chinese, English, and German).
+
+  * **Secure Full-Stack Architecture**: I implemented a decoupled, stateless architecture with a Next.js frontend and a Kotlin/Ktor backend. The backend acts as a secure proxy to the LLM API, ensuring all user data is isolated and API keys are protected.
+
+## Tech Stack
+
+  * **Frontend**: React, Next.js, TypeScript, Material-UI (MUI), Axios
+  * **Backend**: Kotlin, Ktor
+  * **AI Service**: DeepSeek API
+  * **Deployment**: Vercel (Frontend), Render (Backend), Docker
 
 ## Getting Started
 
-First, run the development server:
+To get a local copy up and running, follow these simple steps.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### Prerequisites
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+  * Node.js (v18+)
+  * JDK (11+)
+  * Git
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Installation
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1.  **Clone the repository:**
 
-## Learn More
+    ```sh
+    git clone https://github.com/Logic-syd/Love-Story-Theater.git
+    cd Love-Story-Theater
+    ```
 
-To learn more about Next.js, take a look at the following resources:
+2.  **Set up the Backend:**
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+    ```sh
+    cd love-story-backend
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    # Create a .env file and add your API key
+    echo "DEEPSEEK_API_KEY=sk-xxxxxxxx" > .env
 
-## Deploy on Vercel
+    # Run the server
+    ./gradlew run
+    ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+    Your backend will be running at `http://localhost:8080`.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+3.  **Set up the Frontend (in a new terminal):**
+
+    ```sh
+    cd love-story-frontend
+    npm install
+    npm run dev
+    ```
+
+    Open `http://localhost:3000` in your browser to see the app.
