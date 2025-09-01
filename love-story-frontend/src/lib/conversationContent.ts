@@ -19,6 +19,9 @@ interface LanguagePack {
   appTitle: string;
   inputPlaceholder: string;
   copySuccessMessage: string;
+  storyGenerationError: string;
+  regenerateThinking: string;
+  regenerateError: string;
   nameQuestion: Question;
   poolA: Question[];
   poolB: Question[];
@@ -34,6 +37,7 @@ interface LanguagePack {
     regenerate: string;
     reset: string;
   };
+  loadingMessages: string[];
   regenerateThinkingMessage: string; // 新增字段
 }
 
@@ -43,6 +47,9 @@ export const content: Record<string, LanguagePack> = {
     appTitle: "疗愈收容所",
     inputPlaceholder: "请输入你的回答...",
     copySuccessMessage: "故事已复制到剪贴板！",
+    storyGenerationError: "抱歉，故事生成失败了，请检查后端服务或稍后再试。",
+    regenerateThinking: "好的，我们换一个角度，再来看一次你们美好的未来...",
+    regenerateError: "抱歉，故事再次生成失败了...",
     nameQuestion: {
       key: "name",
       texts: [
@@ -201,6 +208,15 @@ export const content: Record<string, LanguagePack> = {
       ],
     },
     buttons: { regenerate: "换一个梦境", reset: "开启新对话" },
+    loadingMessages: [
+      "正在连接梦境的彼岸...",
+      "我看到了你们在阳光下散步的画面...",
+      "正在为你编织一个温暖的拥抱...",
+      "别急，美好的事物总需要一点点酝酿...",
+      "我听到了他未来的心跳声，很稳，很安心...",
+      "未来的画卷正在缓缓展开...",
+      "再一下下，这个充满希望的梦就要完成了。",
+    ],
     regenerateThinkingMessage:
       "好的，我们换一个角度，再来看一次你们美好的未来...",
   },
@@ -210,6 +226,11 @@ export const content: Record<string, LanguagePack> = {
     appTitle: "WarmWhisper",
     inputPlaceholder: "Type your answer...",
     copySuccessMessage: "Story copied to clipboard!",
+    storyGenerationError:
+      "Sorry, story generation failed. Please check the backend service or try again later.",
+    regenerateThinking:
+      "Okay, let's look at it from another angle and see your beautiful future again...",
+    regenerateError: "Sorry, regenerating the story failed...",
     nameQuestion: {
       key: "name",
       texts: [
@@ -335,6 +356,15 @@ export const content: Record<string, LanguagePack> = {
       ],
     },
     buttons: { regenerate: "Another Dream", reset: "New Conversation" },
+    loadingMessages: [
+      "Connecting to the other side of the dream...",
+      "I see a vision of you walking in the sun...",
+      "Weaving a warm hug for you...",
+      "Don't rush, beautiful things take time...",
+      "I can hear his future heartbeat, it's steady and reassuring...",
+      "The canvas of the future is slowly unfolding...",
+      "Just a moment more, this hopeful dream is almost complete.",
+    ],
     regenerateThinkingMessage:
       "Alright, let’s look at your beautiful future from a new perspective...",
   },
@@ -344,6 +374,12 @@ export const content: Record<string, LanguagePack> = {
     appTitle: "Lichtpunkt",
     inputPlaceholder: "Gib deine Antwort ein...",
     copySuccessMessage: "Geschichte in die Zwischenablage kopiert!",
+    storyGenerationError:
+      "Entschuldigung, die Erstellung der Geschichte ist fehlgeschlagen. Bitte überprüfen Sie den Backend-Dienst oder versuchen Sie es später erneut.",
+    regenerateThinking:
+      "Okay, lass es uns aus einem anderen Blickwinkel betrachten und noch einmal eure schöne Zukunft ansehen...",
+    regenerateError:
+      "Entschuldigung, das erneute Erstellen der Geschichte ist fehlgeschlagen...",
     nameQuestion: {
       key: "name",
       texts: [
@@ -471,6 +507,15 @@ export const content: Record<string, LanguagePack> = {
       ],
     },
     buttons: { regenerate: "Ein anderer Traum", reset: "Neues Gespräch" },
+    loadingMessages: [
+      "Verbinde mit dem jenseitigen Ufer des Traumes...",
+      "Ich sehe Bilder von euch, wie ihr im Sonnenschein spaziert...",
+      "Eine warme Umarmung wird für dich gewoben...",
+      "Keine Eile, schöne Dinge brauchen ein wenig Zeit...",
+      "Ich höre seinen zukünftigen Herzschlag, er ist ruhig und sicher...",
+      "Das Bild der Zukunft entfaltet sich langsam...",
+      "Nur noch einen Augenblick, dieser hoffnungsvolle Traum ist fast fertig.",
+    ],
     regenerateThinkingMessage:
       "Okay, lass uns eure schöne Zukunft aus einem anderen Blickwinkel betrachten...",
   },

@@ -156,7 +156,7 @@ export default function ChatPage() {
           setMessages(prev => [...prev, storyMessage]);
           setStoryFinished(true);
         } catch (err) {
-          const errorMessage: Message = { id: Date.now() + Math.random(), text: '抱歉，故事生成失败了...', sender: 'ai' };
+          const errorMessage: Message = { id: Date.now() + Math.random(), text: currentContent.storyGenerationError, sender: 'ai' };
           setMessages(prev => [...prev, errorMessage]);
         } finally {
           setIsLoading(false);
@@ -185,7 +185,7 @@ export default function ChatPage() {
       setStoryFinished(true);
     } catch (error) {
       console.error('API call failed during regenerate:', error);
-      const errorMessage: Message = { id: Date.now() + Math.random(), text: '抱歉，故事再次生成失败了...', sender: 'ai' };
+      const errorMessage: Message = { id: Date.now() + Math.random(), text: currentContent.regenerateError, sender: 'ai' };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
       setIsLoading(false);
@@ -197,7 +197,7 @@ export default function ChatPage() {
 
   return (
     <Box>
-      {isLoading && <LoadingState />}
+      {isLoading && <LoadingState messages={currentContent.loadingMessages} />}
       {!isLoading && (
         <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', bgcolor: '#fffaf5' }}>
           <AppBar position="static" sx={{ bgcolor: '#ffcdd2', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }} elevation={1}>

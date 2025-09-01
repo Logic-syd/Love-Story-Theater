@@ -2,10 +2,12 @@
 
 ## About This Project
 
+https://github.com/Logic-syd/Love-Story-Theater 
+
 This is a full-stack, AI-powered web application I built to explore the intersection of technology and emotional support. It’s a safe space for users who are feeling down about their relationship. Through a carefully guided, empathetic conversation, the app gathers details about their situation and their partner, then uses an AI to generate a unique, hopeful story that reframes their current problem as a temporary trial on the path to a happy future.
 
 My goal was to create an experience that feels less like a tool and more like a warm, understanding friend.
-
+ 
 You can try the live version here: https://love-story-theater.vercel.app/
 
 ## Key Features
