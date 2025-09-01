@@ -22,7 +22,7 @@ export default function LoadingState({ messages }: { messages: string[] }) {
     // 使用 useEffect 和 setInterval 来定时切换提示语
     useEffect(() => {
         const intervalId = setInterval(() => {
-            setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % loadingMessages.length);
+            setCurrentMessageIndex((prevIndex) => (prevIndex + 1) % messages.length);
         }, 4000); // 每4秒切换一次
 
         // 组件卸载时，清除定时器，防止内存泄漏
