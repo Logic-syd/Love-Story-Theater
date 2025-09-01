@@ -144,7 +144,22 @@ export default function ChatPage() {
         const finalAiMessage: Message = { id: Date.now() + Math.random(), text: ackText, sender: 'ai' };
         setMessages(prev => [...prev, finalAiMessage]);
         setCurrentQuestion(null);
-        setConversationPhase('awaiting_final_ack');
+        setConversationPhase('finished');
+        // --- New Logic: Automatically start story generation after a short delay ---
+        setTimeout(async () => {
+          setIsLoading(true); // Now, jump to loading
+          try {
+            const response = await apiClient.post('/api/generate-story', { ...updatedData, language: language });
+            const storyMessage: Message = { id: Date.now() + Math.random(), text: response.data.response, sender: 'ai' };
+            setMessages(prev => [...prev, storyMessage]);
+            setStoryFinished(true);
+          } catch (err) {
+            const errorMessage: Message = { id: Date.now() + Math.random(), text: currentContent.storyGenerationError, sender: 'ai' };
+            setMessages(prev => [...prev, errorMessage]);
+          } finally {
+            setIsLoading(false);
+          }
+        }, 1500); // We'll wait 1.5 seconds for the user to read the message before the loading screen appears
         break;
       }
       case 'awaiting_final_ack':
